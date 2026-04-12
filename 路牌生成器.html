@@ -5,172 +5,138 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>路牌生成器 by Caelara_Lab</title>
 <style>
-* {margin:0;padding:0;box-sizing:border-box;}
-body{background:#f5f7fa;padding:20px;text-align:center;}
-.panel{background:#fff;padding:20px;border-radius:10px;max-width:520px;margin:0 auto 20px;box-shadow:0 2px 12px rgba(0,0,0,0.1);}
-.mode-bar{display:flex;gap:8px;margin-bottom:15px;}
-.tab{flex:1;padding:10px;border-radius:6px;border:none;cursor:pointer;background:#eee;font-size:15px;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#f5f7fa;padding:20px;text-align:center;font-family:"DIN Condensed","方正交通黑","方正粗黑简体",黑体,sans-serif;}
+.container{background:#fff;padding:24px;border-radius:12px;max-width:520px;margin:0 auto 20px;box-shadow:0 3px 15px rgba(0,0,0,0.1);}
+.tabs{display:flex;gap:10px;margin-bottom:20px;}
+.tab{flex:1;padding:12px;border:none;border-radius:8px;background:#f0f0f0;cursor:pointer;font-size:15px;}
 .tab.active{background:#005EA5;color:#fff;}
-input,select{width:100%;padding:11px;margin:8px 0;border:1px #dcdfe6 solid;border-radius:6px;font-size:16px;outline:none;}
-.btn-row{display:flex;gap:10px;margin-top:15px;}
-button{flex:1;padding:11px;border:none;border-radius:6px;cursor:pointer;font-size:15px;}
-.down{background:#0958d9;color:#fff;}
-.reset{background:#e5e7eb;color:#333;}
-.preview-box{width:400px;height:200px;margin:20px auto;border-radius:20px;overflow:hidden;}
-.show-content{width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
-.font-top{font-family:"DIN Condensed","方正交通黑","方正粗黑简体",sans-serif;font-weight:900;letter-spacing:2px;}
+.ctrl-group{margin-bottom:18px;}
+.ctrl-title{font-size:13px;color:#666;margin-bottom:8px;text-align:left;}
+.ctrl-row{display:flex;gap:10px;margin-bottom:10px;}
+.ctrl-item{flex:1;text-align:left;}
+label{display:block;font-size:12px;color:#555;margin-bottom:4px;}
+input[type="range"],input[type="number"],select{width:100%;padding:8px;border:1px solid #dcdfe6;border-radius:6px;font-size:14px;outline:none;}
+input[type="number"]{width:100%;}
+.btn-row{display:flex;gap:12px;margin-top:20px;}
+button{flex:1;padding:10px;border:none;border-radius:8px;cursor:pointer;font-size:15px;font-weight:500;}
+.btn-primary{background:#0958d9;color:#fff;}
+.btn-default{background:#e5e7eb;color:#333;}
+.btn-reset{background:#fef0f0;color:#dc3545;}
+.preview-box{width:400px;height:200px;margin:20px auto;border-radius:20px;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.preview-content{font-weight:900;display:flex;align-items:center;justify-content:center;}
+.note{max-width:520px;margin:0 auto;font-size:12px;color:#666;text-align:left;line-height:1.5;}
+.canvas-hide{display:none;}
 .hide{display:none;}
-.note{max-width:520px;margin:10px auto;font-size:12px;color:#555;text-align:left;line-height:1.6;}
-canvas{display:none;}
 </style>
 </head>
 <body>
-<div class="panel">
-<div class="mode-bar">
+<div class="container">
+<div class="tabs">
 <button class="tab active" onclick="switchMode('city')">城市路牌</button>
 <button class="tab" onclick="switchMode('road')">公路编号牌</button>
 </div>
-
-<div id="cityInput">
-<input type="text" id="cityName" placeholder="输入街道名称：如济南路">
+<div class="ctrl-group">
+<div class="ctrl-title">字体参数调节</div>
+<div class="ctrl-row">
+<div class="ctrl-item">
+<label>字体大小</label>
+<input type="range" id="fontSize" min="30" max="600" value="72">
 </div>
-
-<div id="roadInput" class="hide">
-<select id="roadType">
+<div class="ctrl-item">
+<label>字间距</label>
+<input type="range" id="letterSpacing" min="0" max="20" value="4">
+</div>
+</div>
+<div class="ctrl-row">
+<div class="ctrl-item">
+<label>自定义字号输入</label>
+<input type="number" id="fontSizeNum" min="30" max="600" value="72">
+</div>
+<div class="ctrl-item">
+<label>导出格式</label>
+<select id="exportType">
+<option value="png">PNG无损</option>
+<option value="jpg">JPG压缩</option>
+</select>
+</div>
+</div>
+</div>
+<div class="ctrl-group">
+<div class="ctrl-title">国标样式参数</div>
+<div class="ctrl-row">
+<div class="ctrl-item">
+<label>圆角半径</label>
+<input type="number" id="radius" min="10" max="200" value="20">
+</div>
+<div class="ctrl-item">
+<label>衬边宽度</label>
+<input type="number" id="borderWidth" min="20" max="120" value="60">
+</div>
+</div>
+<div class="ctrl-row">
+<div class="ctrl-item">
+<label>尺寸预设</label>
+<select id="sizePreset" onchange="setSizePreset()">
+<option value="custom">自定义</option>
+<option value="small">200×100</option>
+<option value="medium" selected>400×200</option>
+<option value="large">600×300</option>
+<option value="hd">2000×1000高清</option>
+</select>
+</div>
+<div class="ctrl-item">
+<label>固定2:1比例</label>
+<input type="text" value="2:1" readonly style="background:#f5f5f5;">
+</div>
+</div>
+</div>
+<div id="cityInputCtrl">
+<input type="text" id="cityText" placeholder="输入街道名称" value="济南路" style="width:100%;padding:10px;border:1px solid #dcdfe6;border-radius:6px;font-size:16px;margin-top:10px;">
+</div>
+<div id="roadInputCtrl" class="hide">
+<select id="roadType" style="width:100%;padding:10px;border:1px solid #dcdfe6;border-radius:6px;font-size:16px;margin-bottom:10px;">
 <option value="g">国道 G</option>
 <option value="s">省道 S</option>
 <option value="x">县道 X</option>
 <option value="y">乡道 Y</option>
 <option value="c">村道 C</option>
 </select>
-<input type="text" id="roadNum" placeholder="仅输入数字编号" maxlength="4" oninput="value=value.replace(/\D/g,'')">
+<input type="text" id="roadNum" placeholder="仅输入数字" maxlength="4" oninput="this.value=this.value.replace(/\D/g,'')" value="108" style="width:100%;padding:10px;border:1px solid #dcdfe6;border-radius:6px;font-size:16px;">
 </div>
-
 <div class="btn-row">
-<button class="down" onclick="saveHD()">下载1:1核对高清图</button>
-<button class="reset" onclick="resetAll()">重置</button>
+<button class="btn-primary" onclick="saveImage()">下载路牌</button>
+<button class="btn-default" onclick="resetAll()">重置参数</button>
+<button class="btn-reset" onclick="resetToGB()">恢复国标默认</button>
 </div>
 </div>
-
-<p>实时预览（与国标手册参数一致）</p>
-<div class="preview-box" id="preWrap">
-<div class="show-content font-top" id="preText" style="background:#005EA5;color:#fff;font-size:72px;">济南路</div>
+<p>实时预览</p>
+<div class="preview-box" id="previewWrap">
+<div class="preview-content" id="previewText" style="background:#005EA5;color:#fff;font-size:72px;letter-spacing:4px;">济南路</div>
 </div>
-
-<div class="note">
-公告<br>
-仅供个人使用，不得用于商业用途<br>
-
-</div>
-
-<canvas id="hdCanvas" width="2000" height="1000"></canvas>
-
+<div class="note">路牌生成器 by Caelara_Lab<</div>
+<canvas id="mainCanvas" class="canvas-hide" width="2000" height="1000"></canvas>
 <script>
-let nowMode = "city";
-const cityIn = document.getElementById("cityInput");
-const roadIn = document.getElementById("roadInput");
-const cityTxt = document.getElementById("cityName");
-const roadSel = document.getElementById("roadType");
-const roadNum = document.getElementById("roadNum");
-const preText = document.getElementById("preText");
-const canvas = document.getElementById("hdCanvas");
-const ctx = canvas.getContext("2d");
-
-const colorLib = {
-city: {bg:"#005EA5",txt:"#FFFFFF"},
-g:{out:"#FFFFFF",bg:"#E60012",txt:"#FFFFFF"},
-s:{out:"#000000",bg:"#FFD100",txt:"#000000"},
-x:{out:"#000000",bg:"#FFFFFF",txt:"#000000"},
-y:{out:"#000000",bg:"#FFFFFF",txt:"#000000"},
-c:{out:"#000000",bg:"#FFFFFF",txt:"#000000"}
-};
-
-
-const HD_W = 2000;
-const HD_H = 1000;
-const RADIUS = HD_H / 10;     // 圆角：高÷10
-const BORDER_W = HD_H / 16;   // 衬边：高÷16
-
-
-function switchMode(m){
-nowMode = m;
-document.querySelectorAll(".tab")[0].classList.toggle("active",m==="city");
-document.querySelectorAll(".tab")[1].classList.toggle("active",m==="road");
-cityIn.classList.toggle("hide",m!=="city");
-roadIn.classList.toggle("hide",m==="city");
-resetAll();
-updatePre();
-}
-
-function updatePre(){
-if(nowMode==="city"){
-let t = cityTxt.value || "济南路";
-preText.style.background = colorLib.city.bg;
-preText.style.color = colorLib.city.txt;
-preText.style.fontSize = "72px";
-preText.innerText = t;
-}else{
-let type = roadSel.value;
-let num = roadNum.value || "220";
-let t = type + num.toUpperCase();
-preText.style.background = colorLib[type].out;
-preText.style.color = colorLib[type].txt;
-preText.style.fontSize = "110px";
-preText.innerHTML = `<div style="width:calc(100%-24px);height:calc(100%-24px);background:${colorLib[type].bg};border-radius:12px;display:flex;align-items:center;justify-content:center;">${t}</div>`;
-}
-}
-
-function saveHD(){
-ctx.clearRect(0,0,HD_W,HD_H);
-if(nowMode==="city"){
-let text = cityTxt.value || "济南路";
-let c = colorLib.city;
-
-ctx.fillStyle = c.bg;
-ctx.beginPath();
-ctx.roundRect(0,0,HD_W,HD_H,RADIUS);
-ctx.fill();
-ctx.fillStyle = c.txt;
-ctx.font = "900 360px DIN Condensed,方正交通黑,sans-serif";
-ctx.textAlign = "center";ctx.textBaseline = "middle";
-ctx.fillText(text,HD_W/2,HD_H/2);
-}else{
-let type = roadSel.value;
-let num = roadNum.value || "220";
-let text = type.toUpperCase() + num;
-let c = colorLib[type];
-
-ctx.fillStyle = c.out;
-ctx.beginPath();
-ctx.roundRect(0,0,HD_W,HD_H,RADIUS);
-ctx.fill();
-
-ctx.fillStyle = c.bg;
-ctx.beginPath();
-ctx.roundRect(BORDER_W,BORDER_W,HD_W-BORDER_W*2,HD_H-BORDER_W*2,RADIUS - BORDER_W/2);
-ctx.fill();
-
-ctx.fillStyle = c.txt;
-ctx.font = "900 520px DIN Condensed,方正交通黑,sans-serif";
-ctx.textAlign = "center";ctx.textBaseline = "middle";
-ctx.fillText(text,HD_W/2,HD_H/2);
-}
-let a = document.createElement("a");
-a.download = "路牌生成器"+Date.now()+".png";
-a.href = canvas.toDataURL("image/png",1.0);
-a.click();
-}
-
-
-function resetAll(){
-cityTxt.value = "";roadNum.value = "";roadSel.value = "g";
-updatePre();
-}
-
-cityTxt.oninput = updatePre;
-roadSel.onchange = updatePre;
-roadNum.oninput = updatePre;
-updatePre();
+let currentMode="city";
+let canvas=document.getElementById("mainCanvas");
+let ctx=canvas.getContext("2d");
+canvas.width=2000;
+canvas.height=1000;
+const colorLib={city:{bg:"#005EA5",text:"#FFFFFF"},g:{out:"#FFFFFF",bg:"#E60012",text:"#FFFFFF"},s:{out:"#000000",bg:"#FFD100",text:"#000000"},x:{out:"#000000",bg:"#FFFFFF",text:"#000000"},y:{out:"#000000",bg:"#FFFFFF",text:"#000000"},c:{out:"#000000",bg:"#FFFFFF",text:"#000000"}};
+let els={cityInput:document.getElementById("cityInputCtrl"),roadInput:document.getElementById("roadInputCtrl"),previewText:document.getElementById("previewText"),cityText:document.getElementById("cityText"),roadType:document.getElementById("roadType"),roadNum:document.getElementById("roadNum"),fontSize:document.getElementById("fontSize"),fontSizeNum:document.getElementById("fontSizeNum"),letterSpacing:document.getElementById("letterSpacing"),radius:document.getElementById("radius"),borderWidth:document.getElementById("borderWidth"),sizePreset:document.getElementById("sizePreset"),exportType:document.getElementById("exportType")};
+function drawRoundRect(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();ctx.fill();}
+function switchMode(mode){currentMode=mode;document.querySelectorAll(".tab")[0].classList.toggle("active",mode==="city");document.querySelectorAll(".tab")[1].classList.toggle("active",mode==="road");els.cityInput.classList.toggle("hide",mode!=="city");els.roadInput.classList.toggle("hide",mode==="road");resetToGB();updatePreview();}
+function setSizePreset(){let preset=els.sizePreset.value;let sizeMap={small:{w:200,h:100,r:10,bw:12,fs:{city:30,road:50},ls:{city:2,road:1}},medium:{w:400,h:200,r:20,bw:60,fs:{city:72,road:110},ls:{city:4,road:2}},large:{w:600,h:300,r:30,bw:90,fs:{city:100,road:160},ls:{city:6,road:3}},hd:{w:2000,h:1000,r:100,bw:60,fs:{city:360,road:520},ls:{city:4,road:2}}};if(preset==="custom")return;let s=sizeMap[preset];els.radius.value=s.r;els.borderWidth.value=s.bw;els.fontSize.value=currentMode==="city"?s.fs.city:s.fs.road;els.fontSizeNum.value=currentMode==="city"?s.fs.city:s.fs.road;els.letterSpacing.value=currentMode==="city"?s.ls.city:s.ls.road;updatePreview();}
+function updatePreview(){let pre=els.previewText;let fs=els.fontSizeNum.value;let ls=els.letterSpacing.value;if(currentMode==="city"){let t=els.cityText.value;pre.style.background=colorLib.city.bg;pre.style.color=colorLib.city.text;pre.style.fontSize=fs+"px";pre.style.letterSpacing=ls+"px";pre.innerText=t;}else{let type=els.roadType.value;let n=els.roadNum.value;let t=type+n;pre.style.background=colorLib[type].out;pre.style.color=colorLib[type].text;pre.style.fontSize=fs+"px";pre.style.letterSpacing=ls+"px";pre.innerHTML="<div style='width:calc(100% - 24px);height:calc(100% - 24px);background:"+colorLib[type].bg+";border-radius:12px;display:flex;align-items:center;justify-content:center;'>"+t+"</div>";}}
+function saveImage(){ctx.clearRect(0,0,2000,1000);let r=Number(els.radius.value);let bw=Number(els.borderWidth.value);let fsNum=currentMode==="city"?360:520;let lsNum=els.letterSpacing.value;if(currentMode==="city"){let t=els.cityText.value;ctx.fillStyle=colorLib.city.bg;drawRoundRect(0,0,2000,1000,r);ctx.fillStyle=colorLib.city.text;ctx.font="900 "+fsNum+"px DIN Condensed,方正交通黑,黑体";ctx.textAlign="center";ctx.textBaseline="middle";ctx.letterSpacing=lsNum;ctx.fillText(t,1000,500);}else{let type=els.roadType.value;let n=els.roadNum.value;let t=type+n;ctx.fillStyle=colorLib[type].out;drawRoundRect(0,0,2000,1000,r);ctx.fillStyle=colorLib[type].bg;drawRoundRect(bw,bw,2000-bw*2,1000-bw*2,r-bw/2);ctx.fillStyle=colorLib[type].text;ctx.font="900 "+fsNum+"px DIN Condensed,方正交通黑,黑体";ctx.textAlign="center";ctx.textBaseline="middle";ctx.letterSpacing=lsNum;ctx.fillText(t,1000,500);}let a=document.createElement("a");let downName="国标路牌_"+Date.now();if(els.exportType.value==="png"){a.download=downName+".png";a.href=canvas.toDataURL("image/png",1);}else{a.download=downName+".jpg";a.href=canvas.toDataURL("image/jpeg",0.92);}a.click();}
+function resetAll(){els.cityText.value="建国路";els.roadType.value="g";els.roadNum.value="108";els.sizePreset.value="medium";resetToGB();updatePreview();}
+function resetToGB(){els.radius.value=20;els.borderWidth.value=60;els.fontSize.value=currentMode==="city"?72:110;els.fontSizeNum.value=currentMode==="city"?72:110;els.letterSpacing.value=currentMode==="city"?4:2;updatePreview();}
+els.fontSize.oninput=function(){els.fontSizeNum.value=this.value;updatePreview();};
+els.fontSizeNum.oninput=function(){els.fontSize.value=this.value;updatePreview();};
+els.cityText.oninput=updatePreview;
+els.roadType.onchange=updatePreview;
+els.roadNum.oninput=updatePreview;
+updatePreview();
 </script>
 </body>
 </html>
